@@ -1,6 +1,10 @@
 ---
 title: "Homework 8: Joins and Summaries"
+<<<<<<< HEAD:Roberto_index.qmd
 author: "Roberto"
+=======
+author: "Anthonie Gomez"
+>>>>>>> ccc014d063e4644e9bc7267947905add88899aa6:index.qmd
 format: html
 categories: hw
 ---
@@ -145,3 +149,27 @@ alleged_murderer <- caught$name.x
 # Solution
 
 Document each productive step of your investigation here.
+
+```{r}
+get_fit_now_member
+address <- c("Franklin Ave", "Northwestern Dr")
+person %>%
+  filter(address_street_name %in% address) %>%
+  filter(str_detect(name, "Annabel"))
+
+witnesses <- left_join(person, interview, by = c("id" = "person_id")) %>%
+  filter(name %in% witness)
+witnesses$transcript
+
+```
+
+```{r}
+person_1 <- person %>%
+  select(id, name, license_id)
+person_license <- left_join(person_1, drivers_license, by = c("license_id" = "id"))
+full_df <- left_join(get_fit_now_member, person_license, by = c("person_id" = "id")) %>% select(-name.x)
+full_df %>%
+  filter(gender == "male" & membership_status == "gold") %>%
+  filter(str_detect(plate_number, "H42W"))
+```
+
