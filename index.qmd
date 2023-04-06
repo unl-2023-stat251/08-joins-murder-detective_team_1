@@ -110,12 +110,16 @@ crime_of_interest$description
 Document each productive step of your investigation here.
 
 ```{r}
-get_fit_now_member
 address <- c("Franklin Ave", "Northwestern Dr")
+
 person %>%
   filter(address_street_name %in% address) %>%
-  filter(str_detect(name, "Annabel"))
+  arrange(desc(address_number))
 
+person %>% 
+  filter(str_detect(""))
+
+witness <- c("Annabel Miller", "Morty Schapiro")
 witnesses <- left_join(person, interview, by = c("id" = "person_id")) %>%
   filter(name %in% witness)
 witnesses$transcript
@@ -125,10 +129,37 @@ witnesses$transcript
 ```{r}
 person_1 <- person %>%
   select(id, name, license_id)
+
 person_license <- left_join(person_1, drivers_license, by = c("license_id" = "id"))
+
 full_df <- left_join(get_fit_now_member, person_license, by = c("person_id" = "id")) %>% select(-name.x)
-full_df %>%
+
+potential_cand <- full_df %>%
   filter(gender == "male" & membership_status == "gold") %>%
   filter(str_detect(plate_number, "H42W"))
+
+inner_join(get_fit_now_check_in, potential_cand, by = c("membership_id" = "id"))
 ```
 
+```{r}
+pot_sus <- left_join(person, interview, by = c("id" = "person_id")) %>%
+  filter(name == "Jeremy Bowers")
+pot_sus$transcript
+```
+
+```{r}
+pot_employers <- facebook_event_checkin %>%
+  filter(str_detect(event_name, "Symphony")) %>%
+  filter(date < 20180000 & date >= 20171200) %>%
+  group_by(person_id) %>%
+  summarize(n = n()) %>%
+  filter(n == 3) %>%
+  select(person_id)
+
+pot_employer_person <- inner_join(pot_employers, person, by = c("person_id" = "id"))
+
+pot_empl_license <- inner_join(pot_employer_person, drivers_license, by = c("license_id" = "id"))
+
+pot_empl_info <- inner_join(pot_empl_license, income, by = c("ssn"))
+```
+We believe the suspect to be Miranda Priestly
