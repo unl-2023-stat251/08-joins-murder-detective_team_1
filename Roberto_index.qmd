@@ -121,8 +121,7 @@ We first wanted to uncover the identity of the witnesses and retrieve their inte
 address <- c("Franklin Ave", "Northwestern Dr")
 
 witnesses <- person %>%
-  filter(address_street_name %in% address) %>%
-  filter(str_detect(name, "Annabel") | address_number == max(address_number)) %>%
+  filter(address_street_name %in% address & (str_detect(name, "Annabel") | address_number == max(address_number))) %>%
   select(name, id)
 
 witness_interviews <- left_join(witnesses, interview, by = c("id" = "person_id"))
@@ -157,8 +156,7 @@ Now we know that a woman has hired Jeremy as a hitman. Using the information Jer
 
 ```{r}
 potential_employer <- facebook_event_checkin %>%
-  filter(str_detect(event_name, "Symphony")) %>%
-  filter(date < 20180000 & date >= 20171200) %>%
+  filter(str_detect(event_name, "Symphony") & between(date, 20171200, 20180000)) %>%
   group_by(person_id) %>%
   summarize(n = n()) %>%
   filter(n == 3) %>%
