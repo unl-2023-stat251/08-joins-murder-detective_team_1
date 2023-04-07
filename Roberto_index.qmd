@@ -104,57 +104,59 @@ To get you started, I'll set you up in the right place.
 ```{r}
 library(dplyr)
 library(tidyr)
+library(stringr)
 
 crime_of_interest <- crime_scene_report %>%
   filter(date == "20180115", city == "SQL City", type == "murder")
 crime_of_interest$description
 ```
 
-
 # Solution
 
 Document each productive step of your investigation here.
 
+We first wanted to uncover the identity of the witnesses and retrieve their interview transcripts. Using the information in the crime report and the relevant tables, we found the two witnesses, Morty Schapiro and Annabel Miller, and read the transcripts.
+
 ```{r}
 address <- c("Franklin Ave", "Northwestern Dr")
 
-person %>%
+witnesses <- person %>%
   filter(address_street_name %in% address) %>%
-  arrange(desc(address_number))
+  filter(str_detect(name, "Annabel") | address_number == max(address_number)) %>%
+  select(name, id)
 
-person %>% 
-  filter(str_detect(""))
-
-witness <- c("Annabel Miller", "Morty Schapiro")
-witnesses <- left_join(person, interview, by = c("id" = "person_id")) %>%
-  filter(name %in% witness)
-witnesses$transcript
-
+witness_interviews <- left_join(witnesses, interview, by = c("id" = "person_id"))
+witness_interviews$transcript
 ```
+Now that we have more information on the criminal, we used the relevant tables and filtered for the  Get Fit Now members that match the criminal that the witnesses described. We got one result: Jeremy Bowers
 
 ```{r}
-person_1 <- person %>%
-  select(id, name, license_id)
+relevant_col_person <- person %>%
+  select(id, license_id)
 
-person_license <- left_join(person_1, drivers_license, by = c("license_id" = "id"))
+relevant_info_license <- drivers_license %>%
+  filter(gender == "male" & str_detect(plate_number, "H42W")) %>%
+  select(id, gender, plate_number)
 
-full_df <- left_join(get_fit_now_member, person_license, by = c("person_id" = "id")) %>% select(-name.x)
+relevant_info_member <- get_fit_now_member %>%
+  filter(membership_status == "gold" & str_detect(id, "48Z")) 
 
-potential_cand <- full_df %>%
-  filter(gender == "male" & membership_status == "gold") %>%
-  filter(str_detect(plate_number, "H42W"))
+person_license <- inner_join(relevant_col_person, relevant_info_license, by = c("license_id" = "id"))
 
-inner_join(get_fit_now_check_in, potential_cand, by = c("membership_id" = "id"))
+potential_suspect <- inner_join(relevant_info_member, person_license, by = c("person_id" = "id"))
 ```
 
-```{r}
-pot_sus <- left_join(person, interview, by = c("id" = "person_id")) %>%
-  filter(name == "Jeremy Bowers")
-pot_sus$transcript
-```
+After narrowing down the suspect to Jeremy, we retrieved his interview transcript to see what he discussed in the interview.
 
 ```{r}
-pot_employers <- facebook_event_checkin %>%
+suspect_interview <- inner_join(potential_suspect, interview, by = "person_id") 
+suspect_interview$transcript
+```
+
+Now we know that a woman has hired Jeremy as a hitman. Using the information Jeremy provided and the relevant tables, we searched for gym members that matched the employer's characteristics that Jeremy mentioned.
+
+```{r}
+potential_employer <- facebook_event_checkin %>%
   filter(str_detect(event_name, "Symphony")) %>%
   filter(date < 20180000 & date >= 20171200) %>%
   group_by(person_id) %>%
@@ -162,10 +164,11 @@ pot_employers <- facebook_event_checkin %>%
   filter(n == 3) %>%
   select(person_id)
 
-pot_employer_person <- inner_join(pot_employers, person, by = c("person_id" = "id"))
+potential_employer_person <- inner_join(potential_employer, person, by = c("person_id" = "id"))
 
-pot_empl_license <- inner_join(pot_employer_person, drivers_license, by = c("license_id" = "id"))
+potential_employer_license <- inner_join(potential_employer_person, drivers_license, by = c("license_id" = "id"))
 
-pot_empl_info <- inner_join(pot_empl_license, income, by = c("ssn"))
+potential_employer_info <- inner_join(potential_employer_license, income, by = "ssn")
 ```
+
 We believe the suspect to be Miranda Priestly
