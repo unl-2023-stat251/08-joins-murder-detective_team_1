@@ -1,10 +1,6 @@
 ---
 title: "Homework 8: Joins and Summaries"
-<<<<<<< HEAD:Roberto_index.qmd
-author: "Roberto"
-=======
-author: "Anthonie Gomez"
->>>>>>> ccc014d063e4644e9bc7267947905add88899aa6:index.qmd
+author: ["Roberto", "Anthonie Gomez"]
 format: html
 categories: hw
 ---
